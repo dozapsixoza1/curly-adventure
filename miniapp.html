@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>CryptoPlay Mini App</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Exo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #080b14;
+      --bg-card: #0d1220;
+      --bg-el: #111827;
+      --cyan: #00e5ff;
+      --purple: #7c3aed;
+      --green: #10b981;
+      --gold: #f59e0b;
+      --text: #f0f4ff;
+      --sub: #8899bb;
+      --dim: #445577;
+      --border: rgba(0,229,255,0.12);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Exo 2', sans-serif; background: var(--bg); color: var(--text); display: flex; flex-direction: column; }
+
+    /* TOP BAR */
+    .topbar {
+      background: var(--bg-card);
+      border-bottom: 1px solid var(--border);
+      padding: 12px 16px;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-shrink: 0;
+    }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo-icon { width: 30px; height: 30px; background: linear-gradient(135deg,var(--cyan),var(--purple)); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 15px; }
+    .logo-text { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; background: linear-gradient(90deg,var(--cyan),#a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .wallet-bar { display: flex; align-items: center; gap: 8px; background: var(--bg-el); border-radius: 8px; padding: 6px 12px; }
+    .wallet-val { font-size: 13px; font-weight: 700; color: var(--cyan); }
+    .wallet-label { font-size: 10px; color: var(--dim); }
+
+    /* SCROLL AREA */
+    .scroll-area { flex: 1; overflow-y: auto; overscroll-behavior: none; padding-bottom: 70px; }
+    .scroll-area::-webkit-scrollbar { display: none; }
+
+    /* WELCOME BANNER */
+    .welcome { margin: 12px; background: linear-gradient(135deg,rgba(124,58,237,0.2),rgba(0,229,255,0.1)); border: 1px solid rgba(0,229,255,0.2); border-radius: 14px; padding: 16px; }
+    .welcome-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+    .welcome h2 { font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; }
+    .welcome-emoji { font-size: 32px; }
+    .welcome p { font-size: 12px; color: var(--sub); line-height: 1.5; margin-bottom: 12px; }
+    .btn-tg-open { width: 100%; background: linear-gradient(135deg,#0088cc,#0055aa); color: white; border: none; padding: 10px; border-radius: 10px; font-family: 'Exo 2', sans-serif; font-size: 13px; font-weight: 700; cursor: pointer; }
+
+    /* SECTION TITLE */
+    .section-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--dim); padding: 16px 16px 8px; }
+
+    /* QUICK ACTIONS */
+    .quick-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; padding: 0 12px; }
+    .qa-btn { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px 8px; text-align: center; cursor: pointer; transition: all 0.2s; }
+    .qa-btn:active { transform: scale(0.95); background: rgba(0,229,255,0.1); }
+    .qa-icon { font-size: 22px; margin-bottom: 4px; }
+    .qa-label { font-size: 10px; color: var(--sub); font-weight: 500; }
+
+    /* FEATURED GAME */
+    .featured { margin: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden; cursor: pointer; }
+    .featured-thumb { height: 140px; display: flex; align-items: center; justify-content: center; font-size: 64px; background: linear-gradient(135deg,#1a0000,#7f1d1d); position: relative; }
+    .featured-tag { position: absolute; top: 10px; left: 10px; background: rgba(245,158,11,0.2); color: var(--gold); font-size: 10px; font-weight: 700; padding: 3px 8px; border-radius: 6px; }
+    .featured-play { position: absolute; bottom: 10px; right: 10px; background: linear-gradient(135deg,var(--cyan),var(--purple)); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; }
+    .featured-info { padding: 12px 14px; }
+    .featured-name { font-family: 'Rajdhani', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+    .featured-desc { font-size: 12px; color: var(--sub); }
+    .featured-stats { display: flex; gap: 12px; margin-top: 8px; }
+    .fstat { font-size: 11px; color: var(--dim); display: flex; align-items: center; gap: 4px; }
+
+    /* HORIZONTAL SCROLL GAMES */
+    .h-scroll { display: flex; gap: 10px; padding: 0 12px; overflow-x: auto; scroll-snap-type: x mandatory; }
+    .h-scroll::-webkit-scrollbar { display: none; }
+    .hgame { flex-shrink: 0; width: 120px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; scroll-snap-align: start; cursor: pointer; transition: all 0.2s; }
+    .hgame:active { transform: scale(0.95); }
+    .hgame-thumb { width: 100%; height: 90px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+    .hgame-info { padding: 8px 10px; }
+    .hgame-name { font-size: 12px; font-weight: 700; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .hgame-reward { font-size: 10px; color: var(--gold); }
+
+    /* DAILY BONUS */
+    .daily-bonus { margin: 12px; background: linear-gradient(135deg,rgba(16,185,129,0.1),rgba(6,78,59,0.2)); border: 1px solid rgba(16,185,129,0.2); border-radius: 14px; padding: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .daily-left { display: flex; align-items: center; gap: 12px; }
+    .daily-icon { font-size: 32px; }
+    .daily-title { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: var(--green); }
+    .daily-sub { font-size: 11px; color: var(--sub); }
+    .btn-claim { background: var(--green); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-family: 'Exo 2', sans-serif; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+
+    /* LEADERBOARD PREVIEW */
+    .leaderboard { margin: 12px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+    .lb-title { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+    .lb-row { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .lb-row:last-child { border-bottom: none; }
+    .lb-rank { width: 20px; font-size: 14px; text-align: center; }
+    .lb-avatar { width: 30px; height: 30px; border-radius: 50%; background: var(--bg-el); display: flex; align-items: center; justify-content: center; font-size: 14px; }
+    .lb-name { flex: 1; font-size: 13px; font-weight: 600; }
+    .lb-score { font-size: 12px; color: var(--gold); font-weight: 700; }
+
+    /* BOTTOM NAV */
+    .bottom-nav {
+      position: fixed; bottom: 0; left: 0; right: 0;
+      background: var(--bg-card);
+      border-top: 1px solid var(--border);
+      display: flex;
+      padding: 8px 0 12px;
+      z-index: 100;
+    }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; padding: 4px; transition: all 0.2s; }
+    .nav-btn:active { transform: scale(0.9); }
+    .nav-icon { font-size: 20px; }
+    .nav-label { font-size: 10px; color: var(--dim); }
+    .nav-btn.active .nav-label { color: var(--cyan); }
+    .nav-btn.active .nav-icon { filter: drop-shadow(0 0 4px var(--cyan)); }
+  </style>
+</head>
+<body>
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">🎮</div>
+      <span class="logo-text">CryptoPlay</span>
+    </div>
+    <div class="wallet-bar">
+      <div>
+        <div class="wallet-label">Balance</div>
+        <div class="wallet-val">2.45 TON</div>
+      </div>
+      <span>💎</span>
+    </div>
+  </div>
+
+  <!-- SCROLL AREA -->
+  <div class="scroll-area">
+
+    <!-- WELCOME -->
+    <div class="welcome">
+      <div class="welcome-top">
+        <h2>Hello, Player! 👋</h2>
+        <div class="welcome-emoji">🎮</div>
+      </div>
+      <p>Welcome to CryptoPlay — Web3 gaming on TON Blockchain. Play, earn TON, and own your in-game NFTs.</p>
+      <button class="btn-tg-open" onclick="openTelegram()">✈️ Follow @cryptoplayy for updates</button>
+    </div>
+
+    <!-- DAILY BONUS -->
+    <div class="daily-bonus">
+      <div class="daily-left">
+        <div class="daily-icon">🎁</div>
+        <div>
+          <div class="daily-title">Daily Bonus Available!</div>
+          <div class="daily-sub">Claim 0.05 TON free today</div>
+        </div>
+      </div>
+      <button class="btn-claim" onclick="claimBonus(this)">Claim!</button>
+    </div>
+
+    <!-- QUICK ACTIONS -->
+    <div class="section-label">Quick Actions</div>
+    <div class="quick-actions">
+      <div class="qa-btn" onclick="showTab('games')"><div class="qa-icon">🎮</div><div class="qa-label">Play</div></div>
+      <div class="qa-btn"><div class="qa-icon">🏆</div><div class="qa-label">Tournament</div></div>
+      <div class="qa-btn"><div class="qa-icon">💎</div><div class="qa-label">NFTs</div></div>
+      <div class="qa-btn"><div class="qa-icon">💸</div><div class="qa-label">Withdraw</div></div>
+    </div>
+
+    <!-- FEATURED -->
+    <div class="section-label">Featured Game</div>
+    <div class="featured">
+      <div class="featured-thumb">
+        🐉
+        <div class="featured-tag">⭐ FEATURED</div>
+        <button class="featured-play">▶ Play</button>
+      </div>
+      <div class="featured-info">
+        <div class="featured-name">Dragon Realm</div>
+        <div class="featured-desc">Epic RPG with NFT weapons and TON rewards</div>
+        <div class="featured-stats">
+          <span class="fstat">👥 50K players</span>
+          <span class="fstat">💰 NFT + TON drops</span>
+          <span class="fstat">💎 NFT</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- HOT GAMES -->
+    <div class="section-label">🔥 Hot Right Now</div>
+    <div class="h-scroll" id="hotGames"></div>
+
+    <!-- NEW GAMES -->
+    <div class="section-label">✨ New Games</div>
+    <div class="h-scroll" id="newGames"></div>
+
+    <!-- LEADERBOARD -->
+    <div class="section-label">🏆 Top Players Today</div>
+    <div class="leaderboard">
+      <div class="lb-row">
+        <div class="lb-rank">🥇</div>
+        <div class="lb-avatar">😎</div>
+        <div class="lb-name">CryptoKing</div>
+        <div class="lb-score">142.5 TON</div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">🥈</div>
+        <div class="lb-avatar">🦁</div>
+        <div class="lb-name">TONmaster</div>
+        <div class="lb-score">98.2 TON</div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank">🥉</div>
+        <div class="lb-avatar">🐉</div>
+        <div class="lb-name">DragonSlayer</div>
+        <div class="lb-score">76.8 TON</div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank" style="color:var(--dim);font-size:12px;">4</div>
+        <div class="lb-avatar">🚀</div>
+        <div class="lb-name">SpaceWizard</div>
+        <div class="lb-score">54.1 TON</div>
+      </div>
+      <div class="lb-row">
+        <div class="lb-rank" style="color:var(--dim);font-size:12px;">5</div>
+        <div class="lb-avatar">⚡</div>
+        <div class="lb-name">LightSpeed99</div>
+        <div class="lb-score">41.3 TON</div>
+      </div>
+    </div>
+
+    <div style="height:20px;"></div>
+  </div>
+
+  <!-- BOTTOM NAV -->
+  <div class="bottom-nav">
+    <div class="nav-btn active" onclick="setTab(this,'home')"><div class="nav-icon">🏠</div><div class="nav-label">Home</div></div>
+    <div class="nav-btn" onclick="setTab(this,'games')"><div class="nav-icon">🎮</div><div class="nav-label">Games</div></div>
+    <div class="nav-btn" onclick="setTab(this,'earn')"><div class="nav-icon">💰</div><div class="nav-label">Earn</div></div>
+    <div class="nav-btn" onclick="setTab(this,'nft')"><div class="nav-icon">💎</div><div class="nav-label">NFTs</div></div>
+    <div class="nav-btn" onclick="setTab(this,'profile')"><div class="nav-icon">👤</div><div class="nav-label">Profile</div></div>
+  </div>
+
+  <script>
+    // Init Telegram WebApp
+    if (window.Telegram && window.Telegram.WebApp) {
+      Telegram.WebApp.ready();
+      Telegram.WebApp.expand();
+    }
+
+    const hotGames = [
+      { emoji:'🎰', name:'Crypto Slots', reward:'0.5 TON/day', bg:'linear-gradient(135deg,#1a1040,#6d28d9)' },
+      { emoji:'🎯', name:'TON Strike', reward:'0.2 TON/kill', bg:'linear-gradient(135deg,#0a001a,#4c1d95)' },
+      { emoji:'🎡', name:'Lucky Wheel', reward:'Up to 50 TON', bg:'linear-gradient(135deg,#200010,#9d174d)' },
+      { emoji:'🃏', name:'Black Jack', reward:'10 TON/win', bg:'linear-gradient(135deg,#001a00,#064e3b)' },
+      { emoji:'🏰', name:'Castle Wars', reward:'5 TON/season', bg:'linear-gradient(135deg,#0f2027,#2c5364)' },
+    ];
+
+    const newGames = [
+      { emoji:'🏎️', name:'TON Racer', reward:'0.3 TON/race', bg:'linear-gradient(135deg,#0f2027,#2c5364)' },
+      { emoji:'🎸', name:'Beat Drop', reward:'0.1 TON/song', bg:'linear-gradient(135deg,#1a1500,#78350f)' },
+      { emoji:'⚽', name:'TON Soccer', reward:'0.5 TON/match', bg:'linear-gradient(135deg,#001000,#14532d)' },
+      { emoji:'🌊', name:'Wave Surfer', reward:'0.3 TON/run', bg:'linear-gradient(135deg,#001520,#0c4a6e)' },
+    ];
+
+    function renderGames(containerId, list) {
+      const el = document.getElementById(containerId);
+      el.innerHTML = list.map(g => `
+        <div class="hgame">
+          <div class="hgame-thumb" style="background:${g.bg}">${g.emoji}</div>
+          <div class="hgame-info">
+            <div class="hgame-name">${g.name}</div>
+            <div class="hgame-reward">💰 ${g.reward}</div>
+          </div>
+        </div>`).join('');
+    }
+
+    renderGames('hotGames', hotGames);
+    renderGames('newGames', newGames);
+
+    function setTab(el, tab) {
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      el.classList.add('active');
+    }
+
+    function claimBonus(btn) {
+      btn.textContent = '✅ Claimed!';
+      btn.disabled = true;
+      btn.style.background = '#1a3a2a';
+      btn.style.color = 'var(--green)';
+    }
+
+    function openTelegram() {
+      if (window.Telegram && window.Telegram.WebApp) {
+        Telegram.WebApp.openTelegramLink('https://t.me/cryptoplayy');
+      } else {
+        window.open('https://t.me/cryptoplayy', '_blank');
+      }
+    }
+  </script>
+</body>
+                                                                                   </html>
